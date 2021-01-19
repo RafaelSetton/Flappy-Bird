@@ -1,32 +1,53 @@
-from time import sleep
 from random import randint
 from os import listdir
-import pygame
-pygame.init()
-pygame.mixer.init()
+from typing import List
+import pygame as pg
+pg.init()
+pg.mixer.init()
 
-IMAGES = {name[:-4]: pygame.image.load(f"Images/{name}") for name in listdir('Images')}
+IMAGES = {name[:-4]: pg.image.load(f"Images/{name}") for name in listdir('Images')}
+
+
+class Pipe:
+    speed = 2
+
+    def __init__(self, screen: pg.Surface, x):
+        self.bottom_img: pg.Surface = IMAGES['pipe']
+        self.top_img: pg.Surface = pg.transform.flip(self.bottom_img, False, True)
+        self.screen = screen
+        self.y = randint(150, self.screen.get_height()-150)
+        self.x = x
+
+    def move(self):
+        self.x -= self.speed
+
+    def blit(self):
+        self.screen.blit(self.bottom_img, (self.x, self.y + 50))
+        self.screen.blit(self.top_img, (self.x, self.y - 50 - self.top_img.get_height()))
 
 
 class Bird:
-    def __init__(self, screen: pygame.Surface):
+    x = 100
+
+    def __init__(self, screen: pg.Surface, next_pipe: Pipe):
         self.screen = screen
         self.images = [IMAGES[f'bird{n}'] for n in range(1, 4)]
-        self.image: pygame.Surface = self.images[0]
+        self.image: pg.Surface = self.images[0]
         self.speed = 0
         self.y = 50
         self.alive = True
+        self.next_pipe = next_pipe
 
     @staticmethod
     def rotate_center(image, topleft, angle):
-        rotated_image = pygame.transform.rotate(image, angle)
+        rotated_image = pg.transform.rotate(image, angle)
         new_rect = rotated_image.get_rect(center=image.get_rect(topleft=topleft).center)
 
         return rotated_image, new_rect.topleft
 
     def blit(self):
-        rotation = min(self.speed*4, 90)
-        self.screen.blit(*self.rotate_center(self.image, (100, int(self.y)), -rotation))
+        rotation = min(self.speed * 4, 90)
+        self.screen.blit(*self.rotate_center(self.image, (self.x, int(self.y)), -rotation))
 
     def frame(self):
         self.y = max(self.y + self.speed, 0)
@@ -34,61 +55,62 @@ class Bird:
         if self.y + self.image.get_height() >= self.screen.get_height():
             self.alive = False
 
-
-class Pipe:
-    def __init__(self, screen: pygame.Surface):
-        self.image: pygame.Surface = IMAGES['pipe']
-        self.screen = screen
-        self.y = randint(150, self.screen.get_height()-150)
-
-    def blit(self, x):
-        self.screen.blit(self.image, (x, self.y + 50))
-        self.screen.blit(pygame.transform.rotate(self.image, 180), (x, self.y - 50 - self.image.get_height()))
+    def jump(self):
+        self.speed = -5
 
 
 class Game:
     def __init__(self):
         self.dp_height = 500
         self.dp_width = 1000
-        self.tela: pygame.Surface = pygame.display.set_mode((self.dp_width, self.dp_height))
-        self.pipes = [Pipe(self.tela) for _ in range(5)]
-        self.bird = Bird(self.tela)
+        self.tela: pg.Surface = pg.display.set_mode((self.dp_width, self.dp_height))
         self.running = True
         self.points = 0
-        self.pipe_x = self.dp_width
+        self.pipes: List[Pipe] = []
+        self.birds: List[Bird] = []
+        self.create_items()
+        Pipe.speed = 2
+
+    def create_items(self):
+        self.pipes = [Pipe(self.tela, self.dp_width + i * 300) for i in range(5)]
+        self.birds = [Bird(self.tela, self.pipes[0])]
 
     def restart(self):
-        image = pygame.transform.scale(IMAGES['Game Over'], (self.tela.get_width(), self.tela.get_height()))
+        image = pg.transform.scale(IMAGES['Game Over'], (self.tela.get_width(), self.tela.get_height()))
         self.tela.blit(image, (0, 0))
-        pygame.display.update()
-        while True:
-            get = pygame.event.get()
-            if [event for event in get if event.type in (pygame.KEYDOWN, pygame.QUIT)]:
-                if [event for event in get if event.type == pygame.KEYDOWN]:
-                    break
-                else:
+        pg.display.update()
+        loop = True
+        while loop:
+            for event in pg.event.get():
+                if event.type == pg.KEYDOWN:
+                    loop = False
+                elif event.type == pg.QUIT:
                     self.running = False
-                    break
+                    loop = False
         self.points = 0
-        self.pipe_x = self.dp_width
-        self.pipes = [Pipe(self.tela) for _ in range(5)]
-        self.bird = Bird(self.tela)
+        self.create_items()
 
     def event_handler(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.birds = []
                 self.running = False
-            elif event.type == pygame.KEYDOWN:
-                self.bird.speed = -4
+            elif event.type == pg.KEYDOWN:
+                self.birds[0].jump()
 
     def collision(self):
-        center_x = 100 + self.bird.image.get_width()/2
-        center_y = self.bird.y + self.bird.image.get_height()/2
-        for index in range(len(self.pipes)):
-            pipe = self.pipes[index]
-            x_ini = self.pipe_x + index*300
-            if x_ini <= center_x <= x_ini + pipe.image.get_width() and not pipe.y-50 <= center_y <= pipe.y+50:
-                self.bird.alive = False
+        for bird in self.birds:
+            for pipe in self.pipes:
+                for x, y in [(bird.x, bird.y),
+                             (bird.x + bird.image.get_width(), bird.y),
+                             (bird.x, bird.y + bird.image.get_height()),
+                             (bird.x + bird.image.get_width(), bird.y + bird.image.get_height())]:
+                    if pipe.x <= x <= pipe.x + pipe.top_img.get_width() and not pipe.y - 50 <= y <= pipe.y + 50:
+                        bird.alive = False
+                        break
+                else:
+                    continue
+                break
 
     def blit(self):
         # BackGround
@@ -98,47 +120,53 @@ class Game:
             self.tela.blit(image, (x, 0))
             x += image.get_width()
 
-        # Bird
-        self.bird.blit()
-
         # Pipes
         ind = 0
         while ind < len(self.pipes):
             pipe = self.pipes[ind]
-            x = self.pipe_x + ind*300
-            if x < -pipe.image.get_width():
+            if pipe.x + pipe.top_img.get_width() < 0:
                 self.pipes.pop(ind)
-                self.pipes.append(Pipe(self.tela))
-                self.pipe_x += 300
+                self.pipes.append(Pipe(self.tela, pipe.x + 1500))
                 self.points += 1
                 ind -= 1
             else:
-                pipe.blit(x)
+                pipe.blit()
             ind += 1
 
         # Points
-        points_img = pygame.font.SysFont('Agency FB', 40, True).render(f"{self.points} pts", True, (255, 255, 255))
-        pygame.draw.rect(self.tela, (0, 0, 0), ((0, 0), (points_img.get_width() + 20, points_img.get_height() + 20)))
+        points_img = pg.font.SysFont('Agency FB', 40, True).render(f"{self.points} pts", True, (255, 255, 255))
+        pg.draw.rect(self.tela, (0, 0, 0), ((0, 0), (points_img.get_width() + 20, points_img.get_height() + 20)))
         self.tela.blit(points_img, (10, 10))
 
-    def loop(self):
+    def loop(self, fps=80):
+        clock = pg.time.Clock()
         while self.running:
             frames = 1
-            while self.bird.alive:
+            while any([bird.alive for bird in self.birds]):
                 self.blit()
-
-                self.bird.frame()
-                self.bird.image = IMAGES[f"bird{1+(frames%30)//10}"]
                 self.event_handler()
                 self.collision()
-                self.pipe_x -= 2
 
-                pygame.display.update()
+                next_pipe = self.pipes[0] if self.pipes[0].x + self.pipes[0].top_img.get_width() > Bird.x \
+                    else self.pipes[1]
+
+                for bird in [b for b in self.birds if b.alive]:
+                    bird.frame()
+                    bird.image = IMAGES[f"bird{1+(frames%30)//10}"]
+                    bird.blit()
+                    bird.next_pipe = next_pipe
+                for pipe in self.pipes:
+                    pipe.move()
+                if frames % (fps * 40) == 0:  # Every 40 seconds
+                    Pipe.speed += 1
+
+                pg.display.update()
                 frames += 1
-                sleep(0.01)
+                clock.tick(fps)
 
-            self.restart()
+            if self.running:
+                self.restart()
 
 
-gm = Game()
-gm.loop()
+if __name__ == '__main__':
+    Game().loop()
