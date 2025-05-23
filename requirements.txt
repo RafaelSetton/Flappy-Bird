@@ -1,0 +1,4 @@
+pygame # Base for the game UI
+matplotlib
+numpy
+neat-python # For the AI
