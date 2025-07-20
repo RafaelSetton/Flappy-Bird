@@ -18,6 +18,13 @@ class BaseScreen:
             if evt.type == pg.QUIT:
                 exit(1)
     
+    def draw_text(self, text, y, selected=False, color=None):
+        if color is None:
+            color = (255, 255, 0) if selected else (255, 255, 255)
+        render = self.FONT.render(text, True, color)
+        rect = render.get_rect(center=(self.screen.get_width() // 2, y))
+        self.screen.blit(render, rect)
+
     def quit(self):
         self.running = False
     

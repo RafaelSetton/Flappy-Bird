@@ -1,4 +1,8 @@
+import json
 import pygame as pg
+from os import remove
+
+from src.screens.savescores import SaveScores
 
 from .screens import *
 
@@ -27,10 +31,23 @@ class Game:
     def loop(self, fps=80):
         while True:        
             sel_screen = SelectionScreen(self.tela)
-            sel_screen.loop()
+            sel_screen.loop(fps)
 
             game = PlayScreen(self.tela, sel_screen.num_players, sel_screen.use_ai)
-            game.loop()
+            game.loop(fps)
+
+            with open('data/highscores.json', 'r') as f:
+                high_scores = json.load(f)
+                min_score = min(high_scores.values(), default=0)
+
+            with open('data/newscores.json', 'r') as f:
+                scores = json.load(f)
+                for player, points in scores.items():
+                    if points <= min_score:
+                        continue
+                    high_scores = SaveScores(self.tela, player, points)
+                    high_scores.loop(fps)
+            remove('data/newscores.json')
             
-            HighScoresScreen(self.tela, game.points).loop()
+            HighScoresScreen(self.tela, game.points).loop(fps)
 

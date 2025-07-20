@@ -22,16 +22,22 @@ if __name__ == '__main__':
     if args.mode == 'play':
         Game().loop()
     else:
+        load_from = input("Select a model to train (blank to start from scratch): ")
+        if load_from:
+            with open(f"data/genomes/{load_from}.pkl", 'rb') as f:
+                p = AITrainer.create_custom_population(NEAT_CONFIG, pickle.load(f))
+        else:
+            p = neat.Population(NEAT_CONFIG)
+        
         # Train AI
-        p = neat.Population(NEAT_CONFIG)
         trainer = AITrainer()
         winner = p.run(trainer.loop, 10)
         pg.quit()
 
         AITrainer.plot()
 
-        name = input("Name for this genome: ")
+        name = input("Name for this genome (Blank to skip): ")
         if name.strip():
-            pickle.dump(winner, open(f"data/genomes/{name.strip()}.pickle", 'wb'))
+            pickle.dump(winner, open(f"data/genomes/{name.strip()}.pkl", 'wb'))
 
         print("\nBest Genome:", winner, sep='\n')

@@ -40,7 +40,7 @@ class HighScoresScreen(BaseScreen):
             elif i == 2:
                 color = (205, 127, 50)
 
-            text = f"{i + 1}. {name}: {score}"
+            text = f"{i + 1}. {name.strip()}: {score}"
             text_surface = self.FONT.render(text, True, color)
             self.place_text(text_surface, 75 + (i + 1) * 25)
         

@@ -12,12 +12,18 @@ class Bird:
     def __init__(self, screen: pg.Surface, next_pipe: Pipe, id: int = 0):
         self.jump_key = self.KEYS[id]
         self.screen = screen
-        self.images = BIRD_IMAGES[self.COLORS[id]]
+        self.color = self.COLORS[id]
+        self.images = BIRD_IMAGES[self.color]
         self.image_n = 0
         self.speed = 0
         self.y = 50
         self.alive = True
         self.next_pipe = next_pipe
+        self.points = 0
+
+    @property
+    def is_ai(self) -> bool:
+        return False
 
     @property
     def image(self) -> pg.Surface:

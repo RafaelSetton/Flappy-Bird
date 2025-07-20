@@ -2,6 +2,7 @@ from typing import List
 from time import sleep
 import pygame as pg
 import pickle
+import json
 import neat
 
 from src import IMAGES, NEAT_CONFIG
@@ -21,11 +22,10 @@ class PlayScreen(BaseScreen):
 
         self.game_over_screen_time = kwargs.get('game_over_screen_time', 1.5)
         
-
     def create_ai_bird(self, enable: True):
         if not enable:
             return []
-        gen = pickle.load(open('data/genomes/main.pickle', 'rb'))
+        gen = pickle.load(open('data/genomes/goat.pkl', 'rb'))
         netw = neat.nn.FeedForwardNetwork.create(gen, NEAT_CONFIG)
         return [AIBird(self.screen, self.pipes[0], gen, netw, False)]
 
@@ -40,12 +40,17 @@ class PlayScreen(BaseScreen):
 
     def handle_collisions(self):
         for bird in self.birds:
+            if not bird.alive:
+                continue
             for pipe in self.pipes:
                 if self.check_collision(bird, pipe):
                     bird.alive = False
+                    bird.points = self.points
                     break
         
-        if not any([bird.alive for bird in self.birds]):
+        # Check if all player birds are dead or AI
+        if all([bird.is_ai or not bird.alive for bird in self.birds]):
+            json.dump({b.color: b.points for b in self.birds}, open('data/newscores.json', 'w'))
             img = pg.transform.scale(IMAGES['Game Over'], (self.screen.get_width(), self.screen.get_height()))
             self.screen.blit(img, (0, 0))
             pg.display.update()
