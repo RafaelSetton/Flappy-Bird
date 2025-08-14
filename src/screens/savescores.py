@@ -39,7 +39,7 @@ class SaveScores(BaseScreen):
             self.name += " "
         scores[self.name] = self.score
         
-        while len(scores) > 20:
+        while len(scores) > 10:
             min_score = min(scores.values())
             min_player = [k for k, v in scores.items() if v == min_score][0]
             del scores[min_player]

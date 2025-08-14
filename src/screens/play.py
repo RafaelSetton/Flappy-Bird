@@ -21,6 +21,7 @@ class PlayScreen(BaseScreen):
         Pipe.speed = 2
 
         self.game_over_screen_time = kwargs.get('game_over_screen_time', 1.5)
+        self.is_training = kwargs.get('is_training', False)
         
     def create_ai_bird(self, enable: True):
         if not enable:
@@ -49,13 +50,22 @@ class PlayScreen(BaseScreen):
                     break
         
         # Check if all player birds are dead or AI
-        if all([bird.is_ai or not bird.alive for bird in self.birds]):
-            json.dump({b.color: b.points for b in self.birds}, open('data/newscores.json', 'w'))
-            img = pg.transform.scale(IMAGES['Game Over'], (self.screen.get_width(), self.screen.get_height()))
-            self.screen.blit(img, (0, 0))
-            pg.display.update()
-            sleep(self.game_over_screen_time)
+        all_players_dead = all(not b.alive for b in self.birds if not isinstance(b, AIBird))
+        all_dead = all(not b.alive for b in self.birds)
+        if all_dead or (all_players_dead and not self.is_training):
             self.quit()
+
+    def quit(self):
+        # Save scores
+        json.dump({b.color: b.points for b in self.birds}, open('data/newscores.json', 'w'))
+        
+        # Show game over screen
+        img = pg.transform.scale(IMAGES['Game Over'], (self.screen.get_width(), self.screen.get_height()))
+        self.screen.blit(img, (0, 0))
+        pg.display.update()
+        sleep(self.game_over_screen_time)
+        
+        return super().quit()
 
     def blit(self):
         # BackGround

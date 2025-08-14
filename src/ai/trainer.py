@@ -29,13 +29,13 @@ class AITrainer(Game):
         return p
 
     def loop(self, genomes, config, fps=500):     
-        game = PlayScreen(self.tela, 0, False, game_over_screen_time = 0)
+        game = PlayScreen(self.tela, 0, False, game_over_screen_time = 0, is_training=True)
         game.birds = list(self.create_birds(genomes, config, game.pipes[0]))
         game.loop(fps)
         self.LOGS.append([bird.genome.fitness for bird in game.birds])
 
     def create_birds(self, genomes, config, first_pipe):
-        for genome_id, genome in genomes:
+        for _, genome in genomes:
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             genome.fitness = 0
             yield AIBird(self.tela, first_pipe, genome, net)

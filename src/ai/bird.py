@@ -1,12 +1,14 @@
 import neat
+import pygame as pg
 
+from src.pipe import Pipe
 from ..bird import Bird
 
 class AIBird(Bird):
-    def __init__(self, screen, next_pipe, genome, network, training=True):
+    def __init__(self, screen: pg.Surface, next_pipe: Pipe, genome: neat.DefaultGenome, network: neat.nn.FeedForwardNetwork, training: bool = True):
         super().__init__(screen, next_pipe)
-        self.genome: neat.DefaultGenome = genome
-        self.network: neat.nn.FeedForwardNetwork = network
+        self.genome = genome
+        self.network = network
         self.training = training
         self.skip_frames = 120
 
