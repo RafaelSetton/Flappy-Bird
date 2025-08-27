@@ -82,7 +82,7 @@ Flappy-Bird/
 |   └── highscores.json  # Highscores data
 ├── images/              # Screenshots and graphs
 ├── src/
-|   ├── ai/              # Python files to train anduse the AI
+|   ├── ai/              # Python files to train and use the AI
 |   ├── assets/          # Images that will be rendered on screen
 |   └── ...              # All other python files
 ├── .gitignore
@@ -101,9 +101,9 @@ NEAT parameters like population size, mutation rate, and fitness function are de
 ```ini
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 100
+fitness_threshold     = 1500
 pop_size              = 250
-reset_on_extinction   = False
+reset_on_extinction   = True
 ```
 
 > 📘 For advanced tuning, refer to the [neat-python documentation](https://neat-python.readthedocs.io/en/latest/config_file.html).
@@ -120,9 +120,7 @@ The AI's average and maximum fitness scores across generations are plotted in re
 
 ## 📌 To Do
 
-- [ ] Implement Highscores backend
-- [ ] Save and load best-performing genomes
-- [ ] Add sound and animations
+- [ ] Add sound
 
 ---
 

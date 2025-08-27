@@ -26,5 +26,54 @@ class AIBird(Bird):
             self.skip_frames -= 1
         elif self.alive:
             self.genome.fitness += .1
-        if self.genome.fitness > 1500 and self.training:
+        if self.genome.fitness > 1e8 and self.training:
             self.alive = False
+
+    def blit(self):
+        # self.draw_network()
+        return super().blit()   
+
+    def draw_network(self, pos=(50, 50), size=200):
+        """
+        Draws a simple visualization of the NEAT network on the given surface.
+        pos: top-left position to start drawing
+        size: width/height of the network box
+        """
+        if not hasattr(self, 'genome'):
+            return
+
+        # Get nodes and connections
+        nodes = list(self.genome.nodes.keys())
+        inputs = self.network.input_nodes
+        outputs = self.network.output_nodes
+        hidden = [k for k in nodes if k not in inputs + outputs]
+
+
+        # Layout
+        layer_y = {
+            'input': pos[1] + 20,
+            'hidden': pos[1] + size // 2,
+            'output': pos[1] + size - 20
+        }
+        node_pos = {}
+        for i, k in enumerate(inputs):
+            node_pos[k] = (pos[0] + i * size // (len(inputs)+1), layer_y['input'])
+        for i, k in enumerate(hidden):
+            node_pos[k] = (pos[0] + i * size // (len(hidden)+1), layer_y['hidden'])
+        for i, k in enumerate(outputs):
+            node_pos[k] = (pos[0] + i * size // (len(outputs)+1), layer_y['output'])
+
+        # Draw connections
+        for cg in self.genome.connections.values():
+            if not cg.enabled:
+                continue
+            start = node_pos.get(cg.key[0])
+            end = node_pos.get(cg.key[1])
+            if start and end:
+                color = (0, 255, 0) if cg.weight > 0 else (255, 0, 0)
+                pg.draw.line(self.screen, color, start, end, 2)
+
+        # Draw nodes
+        for k, p in node_pos.items():
+            pg.draw.circle(self.screen, (200, 200, 200), p, 10)
+            pg.draw.circle(self.screen, (0, 0, 0), p, 10, 2)

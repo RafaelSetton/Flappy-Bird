@@ -19,6 +19,7 @@ class PlayScreen(BaseScreen):
         self.pipes: List[Pipe] = [Pipe(self.screen, self.screen.get_width() + i * 300) for i in range(5)]
         self.birds: List[Bird] = [Bird(screen, self.pipes[0], i+1) for i in range(n_players)] + self.create_ai_bird(use_ai)
         Pipe.speed = 2
+        Bird.G = 0.2
 
         self.game_over_screen_time = kwargs.get('game_over_screen_time', 1.5)
         self.is_training = kwargs.get('is_training', False)
@@ -26,7 +27,7 @@ class PlayScreen(BaseScreen):
     def create_ai_bird(self, enable: True):
         if not enable:
             return []
-        gen = pickle.load(open('data/genomes/goat.pkl', 'rb'))
+        gen = pickle.load(open('data/genomes/default.pkl', 'rb'))
         netw = neat.nn.FeedForwardNetwork.create(gen, NEAT_CONFIG)
         return [AIBird(self.screen, self.pipes[0], gen, netw, False)]
 
@@ -107,8 +108,10 @@ class PlayScreen(BaseScreen):
             bird.next_pipe = next_pipe
         for pipe in self.pipes:
             pipe.move()
-        if frame_n % (fps * 40) == 0:  # Every 40 seconds
-            Pipe.speed += 1
+        if frame_n % (fps * 4) == 0:  # Every 40 seconds
+            increasing_factor = 1.05
+            Pipe.speed *= increasing_factor
+            Bird.G *= increasing_factor**2
 
     def event_handler(self, events: List[pg.event.Event]):
         for event in events:

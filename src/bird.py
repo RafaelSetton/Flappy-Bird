@@ -5,6 +5,7 @@ from .pipe import Pipe
 
 class Bird:
     x = 100
+    G = 0.2
 
     COLORS = ["base", "red", "green", "blue"]
     KEYS = ' qpb'
@@ -45,10 +46,10 @@ class Bird:
 
     def frame(self):
         self.y = max(self.y + self.speed, 0)
-        self.speed += 0.2
+        self.speed += self.G
         if self.y + self.image.get_height() >= self.screen.get_height():
             self.alive = False
 
     def jump(self):
-        self.speed = -5
+        self.speed = -4.5
 

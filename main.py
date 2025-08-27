@@ -31,7 +31,7 @@ if __name__ == '__main__':
         
         # Train AI
         trainer = AITrainer()
-        winner = p.run(trainer.loop, 10)
+        winner = p.run(trainer.loop, 40)
         pg.quit()
 
         AITrainer.plot()

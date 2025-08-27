@@ -1,6 +1,6 @@
 import json
 import pygame as pg
-from os import remove
+from os import remove, makedirs
 
 from src.screens.savescores import SaveScores
 
@@ -40,6 +40,7 @@ class Game:
                 high_scores = json.load(f)
                 min_score = min(high_scores.values(), default=0)
 
+            makedirs('data', exist_ok=True)
             with open('data/newscores.json', 'r') as f:
                 scores = json.load(f)
                 for player, points in scores.items():
